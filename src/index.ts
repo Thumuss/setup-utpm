@@ -73,7 +73,7 @@ async function downloadAndCacheUtpm(version: string) {
     process.exit(1);
   }
   
-  const archiveExt = process.platform === "win32" ? ".zip" : ".tar.gz";
+  const archiveExt = process.platform === "win32" ? ".zip" : ".tar.xz";
   const binaryName = process.platform === "win32" ? "utpm.exe" : "utpm";
   const file = `utpm-${target}${archiveExt}`;
   
