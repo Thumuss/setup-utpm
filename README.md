@@ -2,8 +2,6 @@
 
 This action installs and configures [UTPM](https://github.com/typst-community/utpm) (Unofficial Typst Package Manager).
 
-
-
 ## Usage
 
 ```yaml

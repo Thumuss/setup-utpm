@@ -119,11 +119,17 @@ runs:
         echo "Downloading UTPM v${VERSION} for ${TARGET}..."
         curl -sL "$DOWNLOAD_URL" -o "$ARCHIVE"
         
+        # Verify the downloaded file
+        if [ ! -s "$ARCHIVE" ]; then
+          echo "Error: Downloaded file is empty or does not exist."
+          exit 1
+        fi
+        
         # Extract binary
         if [ "$OS" = "windows" ]; then
-          unzip -q "$ARCHIVE" "$BINARY"
+          unzip -q "$ARCHIVE" "$BINARY" || { echo "Error: Failed to extract ZIP archive."; exit 1; }
         else
-          tar xzf "$ARCHIVE" "$BINARY"
+          tar xzf "$ARCHIVE" "$BINARY" || { echo "Error: Failed to extract TAR.GZ archive."; exit 1; }
         fi
         
         # Install to ~/.local/bin
