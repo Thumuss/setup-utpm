@@ -18,7 +18,7 @@ jobs:
     - name: Setup UTPM
       uses: typst-community/setup-utpm@v1
       with:
-        version: 'latest'
+        version: 'latest'  # or specific version like '0.2.0'
 
     - name: Use UTPM
       run: utpm --version
@@ -37,6 +37,23 @@ jobs:
 |-------------|----------------------------------------------|
 | `version`   | The installed version of UTPM                |
 | `cache-hit` | Whether the installation was restored from cache |
+
+## Development
+
+This action is written in TypeScript. To build and package it:
+
+```bash
+# Install dependencies
+npm install
+
+# Build TypeScript to JavaScript
+npm run build
+
+# Package the action for distribution (includes dependencies)
+npm run package
+```
+
+The compiled action is in `dist/index.js` and must be committed to the repository for the action to work.
 
 ## More Details
 
