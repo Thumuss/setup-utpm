@@ -2,6 +2,8 @@
 
 This action installs and configures [UTPM](https://github.com/typst-community/utpm) (Unofficial Typst Package Manager).
 
+
+
 ## Usage
 
 ```yaml
@@ -38,6 +40,11 @@ jobs:
 | `version`   | The installed version of UTPM                |
 | `cache-hit` | Whether the installation was restored from cache |
 
+## More Details
+
+For more details, please visit the [GitHub repository](https://github.com/typst-community/utpm) and navigate to [`/docs/ACTION.md`]((https://github.com/typst-community/utpm/docs/)).
+
 ## License
 
 The scripts and documentation in this project are released under the [MIT License](LICENSE).
+
