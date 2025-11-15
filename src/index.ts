@@ -58,37 +58,60 @@ async function getExactVersion(releases: any[], version: string) {
 async function downloadAndCacheUtpm(version: string) {
   core.info(`Downloading and caching UTPM ${version}.`);
   
-  const target = {
-    "darwin,arm64": "aarch64-apple-darwin",
-    "darwin,x64": "x86_64-apple-darwin",
-    "linux,x64": "x86_64-unknown-linux-gnu",
-    "linux,arm64": "aarch64-unknown-linux-gnu",
-    "win32,x64": "x86_64-pc-windows-msvc",
-  }[[process.platform, process.arch].join(",")];
+  // Try musl first for Linux, fallback to gnu if not available
+  const targets = {
+    "darwin,arm64": ["aarch64-apple-darwin"],
+    "darwin,x64": ["x86_64-apple-darwin"],
+    "linux,x64": ["x86_64-unknown-linux-musl", "x86_64-unknown-linux-gnu"],
+    "linux,arm64": ["aarch64-unknown-linux-gnu"],
+    "win32,x64": ["x86_64-pc-windows-msvc"],
+    "win32,arm64": ["aarch64-pc-windows-msvc"],
+  };
   
-  if (!target) {
+  const platformKey = [process.platform, process.arch].join(",");
+  const possibleTargets = targets[platformKey as keyof typeof targets];
+  
+  if (!possibleTargets) {
     core.setFailed(
       `Unsupported platform: ${process.platform}-${process.arch}`
     );
     process.exit(1);
   }
   
-  const archiveExt = process.platform === "win32" ? ".zip" : ".tar.xz";
+  const archiveExt = process.platform === "win32" ? ".zip" : ".tar.gz";
   const binaryName = process.platform === "win32" ? "utpm.exe" : "utpm";
-  const file = `utpm-${target}${archiveExt}`;
   
-  core.debug(`Determined target: ${target}, archive extension: ${archiveExt}.`);
+  // Try each possible target until one works
+  let downloaded: string | null = null;
+  let target: string | null = null;
   
-  const downloadUrl = `https://github.com/typst-community/utpm/releases/download/v${version}/${file}`;
-  core.info(`Downloading from ${downloadUrl}`);
+  for (const candidateTarget of possibleTargets) {
+    const file = `utpm-${candidateTarget}${archiveExt}`;
+    const downloadUrl = `https://github.com/typst-community/utpm/releases/download/v${version}/${file}`;
+    
+    core.info(`Attempting to download from ${downloadUrl}`);
+    
+    try {
+      downloaded = await tc.downloadTool(downloadUrl);
+      
+      // Verify download
+      if (fs.existsSync(downloaded) && fs.statSync(downloaded).size > 0) {
+        target = candidateTarget;
+        core.info(`Successfully downloaded UTPM for target: ${target}`);
+        break;
+      }
+    } catch (error) {
+      core.debug(`Failed to download ${candidateTarget}: ${(error as Error).message}`);
+      continue;
+    }
+  }
   
-  let downloaded = await tc.downloadTool(downloadUrl);
-  
-  // Verify download
-  if (!fs.existsSync(downloaded) || fs.statSync(downloaded).size === 0) {
-    core.setFailed(`Failed to download UTPM from ${downloadUrl}`);
+  if (!downloaded || !target) {
+    core.setFailed(`Failed to download UTPM v${version} for any compatible target`);
     process.exit(1);
   }
+  
+  core.debug(`Determined target: ${target}, archive extension: ${archiveExt}.`);
   
   let extracted: string;
   
